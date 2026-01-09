@@ -27,7 +27,9 @@ import java.util.Set;
 import org.testng.Assert;
 //import org.testng.ITestResult;
 import org.testng.asserts.SoftAssert;
+import utils.ExtentManager;
 import utils.ExtentTestManager;
+import utils.Log;
 
 public class BaseTest {
 
@@ -47,80 +49,67 @@ public class BaseTest {
         }
     }
 
-//    @Before
-//    public void beforeScenario(Scenario scenario) {
-//        setup();
-//    }
-//
-//    public void setup() {
-//        String browserName = prop.getProperty("browser").toLowerCase();
-//        switch (browserName) {
-//            case "chrome":
-//                WebDriverManager.chromedriver().setup();
-//                ChromeOptions chromeOption = new ChromeOptions();
-////                chromeOption.addArguments("--incognito");
-////                chromeOption.addArguments("--headless");
-//                chromeOption.addArguments("--ignore-certificate-errors");
-//                chromeOption.addArguments("--disable-infoBars");
-//                chromeOption.addArguments("--disable-gpu");
-//                chromeOption.addArguments("--disable-extensions");
-//                chromeOption.addArguments("--allow-insecure-localhost");
-//                chromeOption.addArguments("--disable-notifications");
-//                chromeOption.addArguments("--disable-web-security");
-//                chromeOption.addArguments("--disable-popup-blocking");
-//                chromeOption.setExperimentalOption("useAutomationExtension", false);
-//                chromeOption.setExperimentalOption("excludeSwitches",
-//                        java.util.Collections.singletonList("enable-automation"));
-//                driver = new ChromeDriver(chromeOption);
-//                break;
-//
-//            case "edge":
-//                WebDriverManager.edgedriver().setup();
-//                EdgeOptions edgeOption = new EdgeOptions();
-////                edgeOption.addArguments("--inPrivate");
-//                edgeOption.addArguments("--disable-notifications");
-//                edgeOption.addArguments("--ignore-certificate-errors");
-//                driver = new EdgeDriver(edgeOption);
-//                break;
-//
-//            default:
-//                throw new IllegalArgumentException("Invalid browser name: " + prop.getProperty("browser"));
-//        }
-//        driver.get(prop.getProperty("siteUrl"));
-//        driver.manage().window().maximize();
-//        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(Long.parseLong(prop.getProperty("timeout"))));
-//        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(Long.parseLong(prop.getProperty("timeout"))));
-//    }
-//
-//    public void tearDown() {
-//        if (driver != null) {
-//            try {
-//                Thread.sleep(2000); // Adding a short delay
-//            } catch (InterruptedException e) {
-//                System.out.println("Browser Null");
-//            }
-//            driver.close(); // Properly close the session
-//        }
-//    }
-//
-//    @After
-//    public void afterScenario(ITestResult result) {
-////        if (result.getStatus()==ITestResult.FAILURE){
-////            String path = takeScreenShot(result.getName());
-////            try {
-////                ExtentTestManager.getTest().fail("Test Failed - ScreenShot Attached").addScreenCaptureFromPath(path);
-////            } catch (Exception e) {
-////                e.printStackTrace();
-////            }
-////        }
-////        ExtentTestManager.endTest();
-//
-//        if (driver != null){
-//            ExtentTestManager.endTest();
-//        }
-//    }
+    /************** BROWSER SETUP ******************/
+    public void setup() {
+        String browserName = prop.getProperty("browser").toLowerCase();
+        Log.info("Starting Browser:" + browserName);
+         try {
+            switch (browserName) {
+                case "chrome":
+                    WebDriverManager.chromedriver().setup();
+                    ChromeOptions chromeOption = new ChromeOptions();
+                    chromeOption.addArguments("--incognito");
+//                    chromeOption.addArguments("--headless");
+                    chromeOption.addArguments("--ignore-certificate-errors");
+                    chromeOption.addArguments("--disable-infoBars");
+                    chromeOption.addArguments("--disable-gpu");
+                    chromeOption.addArguments("--disable-extensions");
+                    chromeOption.addArguments("--allow-insecure-localhost");
+                    chromeOption.addArguments("--disable-notifications");
+                    chromeOption.addArguments("--disable-web-security");
+                    chromeOption.addArguments("--disable-popup-blocking");
+                    chromeOption.setExperimentalOption("useAutomationExtension", false);
+                    chromeOption.setExperimentalOption("excludeSwitches",
+                            java.util.Collections.singletonList("enable-automation"));
+                    driver = new ChromeDriver(chromeOption);
+                    break;
 
-    /************** ScreenShot *** @return******************/
+                case "edge":
+                    WebDriverManager.edgedriver().setup();
+                    EdgeOptions edgeOption = new EdgeOptions();
+                    edgeOption.addArguments("--inPrivate");
+                    edgeOption.addArguments("--disable-notifications");
+                    edgeOption.addArguments("--ignore-certificate-errors");
+                    driver = new EdgeDriver(edgeOption);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Invalid browser name: " + prop.getProperty("browser"));
+            }
+            driver.get(prop.getProperty("siteUrl"));
+            driver.manage().window().maximize();
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(Long.parseLong(prop.getProperty("timeout"))));
+            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(Long.parseLong(prop.getProperty("timeout"))));
+        } catch (Exception e) {
+            Log.error("Browser setup failed: " + e.getMessage());
+            System.out.println("Browser could not be launched, Please check the issue: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public void tearDown() {
+        if (driver != null) {
+            try {
+                Thread.sleep(2000); // Adding a short delay
+            } catch (InterruptedException e) {
+                System.out.println("Browser Null");
+            }
+            driver.close(); // Properly close the session
+        }
+    }
+
+
+    /************** SCREENSHOT UTILITY ******************/
     public String takeScreenShot(String ssName) {
         TakesScreenshot ts = (TakesScreenshot) driver;
         File src = ts.getScreenshotAs(OutputType.FILE);
@@ -132,9 +121,39 @@ public class BaseTest {
         return ssName;
     }
 
-    /************** DropDown methods ******************/
+    public String takeScreenShotAs(String ssName) {
+        File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+        String path = System.getProperty("user.dir") + "/Screenshots/" + "/" + ssName + ".png";
+        File dest = new File(path);
+        try {
+            FileHandler.copy(src, dest);
+        } catch (IOException e) {
+            Log.error("Failed to take screenshot: " + e.getMessage());
+        }
+        return path;
+    }
+
+    /************** CENTRALIZED ERROR HANDLER ******************/
+    private void handleException(String action, Exception e, By locator) {
+        String message = "Exception during: " + action +
+                " | Locator: " + locator +
+                " |Error: " + e.getMessage();
+        Log.error(message);
+        ExtentTestManager.getTest().fail(message);
+
+        //Attach screenshot
+        String screenShotPath = takeScreenShotAs("Error_" + System.currentTimeMillis());
+        try {
+            ExtentTestManager.getTest().addScreenCaptureFromPath(screenShotPath);
+        }catch (Exception ignored){}
+    }
+
+    /************** DROPDOWN METHODS ******************/
     public void selectValueFromSelectDd(By locator, String value, String type) {
+
         Select s = new Select(waitForElement(locator));
+        Log.info("open dropdown: " + locator + "to select value: " + value + " by type: " + type);
+        ExtentTestManager.getTest().info("Select value: "+value+" by type: "+type+" from dropdown: "+locator);
         switch (type) {
             case "visibleText":
                 s.selectByVisibleText(value);
@@ -168,21 +187,40 @@ public class BaseTest {
 
 
     public void click(By locator) {
+        Log.info("Clicking on element: " + locator);
+        ExtentTestManager.getTest().info("Click: "+locator);
         try {
             waitForElement(locator).click();
-        } catch (Exception e) {
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            js.executeScript("arguments[0].click();", waitForElement(locator));
+        } catch (Exception firstException) {
+            try {
+                Log.warn("Normal click failed, trying JS click: " + locator);
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                js.executeScript("arguments[0].click();", waitForElement(locator));
+            } catch (Exception e) {
+                handleException("click", e, locator);
+                throw e;
+            }
         }
     }
 
     public void clearAndEnter(By locator, String value) {
+        Log.info("Typing in: " + locator + " | Text: " + value);
+        ExtentTestManager.getTest().info("Type: " + value + " into " + locator);
         try {
-            waitForElement(locator).clear();
-            waitForElement(locator).sendKeys(value);
-        } catch (Exception e) {
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            js.executeScript("arguments[0].value= arguments[1]);", waitForElement(locator), value);
+            WebElement ele = waitForElement(locator, 15);
+            ele.clear();
+            ele.sendKeys(value);
+        } catch (Exception firstException) {
+            try {
+                Log.info("Normal sendkeys failed, setting value using js: " + locator);
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                js.executeScript("arguments[0].value= arguments[1]);", waitForElement(locator), value);
+
+            } catch (Exception e) {
+                handleException("clearAndEnter", e, locator);
+                throw e;
+            }
+
         }
     }
 
@@ -255,7 +293,14 @@ public class BaseTest {
 
     /************** get element text ******************/
     public String getElementText(By locator) {
-        return waitForElement(locator).getText();
+        Log.info("Getting text from element: " + locator);
+        ExtentTestManager.getTest().info("Read text from: " + locator);
+        try {
+            return driver.findElement(locator).getText();
+        } catch (Exception e) {
+            handleException("getElementText", e, locator);
+            throw e;
+        }
     }
 
     public String getWindowTitle() {
@@ -267,23 +312,26 @@ public class BaseTest {
         driver.switchTo().frame(id);
     }
 
-    /************** Soft Assertion ******************/
+    /************** ASSERTIONS ******************/
     public void softAssertEquals(Object actual, Object expected, String message) {
+        Log.info("Soft Assert Equals: " +message);
         soft.assertEquals(actual, expected, message);
         soft.assertAll();
     }
 
     public void softAssertTrue(boolean condition, String message) {
+        Log.info("Soft Assert True: " +message);
         soft.assertTrue(condition, message);
         soft.assertAll();
     }
 
-    /************** Soft Assertion ******************/
     public void hardAssertEquals(Object actual, Object expected, String message) {
+        Log.info("Hard Assert Equals: " +message);
         Assert.assertEquals(actual, expected, message);
     }
 
     public void hardAssertTrue(boolean condition, String message) {
+        Log.info("Hard Assert True: " +message);
         Assert.assertTrue(condition, message);
     }
 

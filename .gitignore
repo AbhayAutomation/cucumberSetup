@@ -1,0 +1,49 @@
+# ===========================
+# Eclipse specific
+# ===========================
+.metadata/
+.settings/
+.classpath
+.project
+
+# If you use Eclipse’s m2e plugin, ignore its local metadata
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ===========================
+# Maven specific
+# ===========================
+target/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# ===========================
+# IntelliJ / Other IDEs
+# ===========================
+.idea/
+*.iml
+
+# ===========================
+# Logs and temp files
+# ===========================
+*.log
+*.tmp
+*.swp
+
+# ===========================
+# OS generated files
+# ===========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===========================
+# Test output
+# ===========================
+surefire-reports/
+test-output/
