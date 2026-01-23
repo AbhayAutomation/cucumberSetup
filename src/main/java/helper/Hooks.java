@@ -2,6 +2,7 @@ package helper;
 
 import io.cucumber.java.*;
 import io.cucumber.java.Scenario;
+import utils.ExtentLogger;
 import utils.ExtentManager;
 import utils.ExtentTestManager;
 import utils.Log;
@@ -19,24 +20,26 @@ public class Hooks extends BaseTest {
 
     @After
     public void afterScenario(Scenario scenario) {
+
         if (scenario.isFailed()) {
-            String screenShotpath = takeScreenShotAs(scenario.getName());
+            String screenshotPath = takeScreenShotAs(scenario.getName());
+
             ExtentTestManager.getTest()
-                    .fail("Scenario Failed - ScreenShot Attached")
-                    .addScreenCaptureFromPath(screenShotpath);
+                    .fail("Scenario Failed")
+                    .addScreenCaptureFromPath(screenshotPath);
         } else {
-            ExtentTestManager.getTest().pass("Scenario Passed");
-            Log.info("Scenario Passed");
+            ExtentLogger.info("Scenario Passed");
         }
+
         if (driver != null) {
-            tearDown();
+            driver.quit();
         }
     }
 
 
-//    @AfterAll
-//    public static void afterAll() {
+    @AfterAll
+    public static void afterAll() {
 //        ExtentManager.getReporter().flush();
-//    }
+    }
 
 }

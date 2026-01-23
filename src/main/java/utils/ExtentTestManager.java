@@ -6,17 +6,17 @@ public class ExtentTestManager {
 
     private static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
 
-    public static  ExtentTest getTest(){
+    public static ExtentTest getTest() {
         return test.get();
     }
 
-    public static void startTest(String testName){
+    public static void startTest(String testName) {
         ExtentTest extentTest = ExtentManager.getReporter().createTest(testName);
         test.set(extentTest);
     }
 
-    //Do Not flush here
-    public static void endTest(){
-        //nothing to do here
+    // ❗ Do NOT flush here
+    public static void endTest() {
+        // Nothing to do here
     }
 }

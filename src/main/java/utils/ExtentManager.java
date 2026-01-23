@@ -21,7 +21,6 @@ public class ExtentManager {
 
             extent.setSystemInfo("OS", System.getProperty("os.name"));
             extent.setSystemInfo("Tester", "QA Automation");
-
         }
         return extent;
     }

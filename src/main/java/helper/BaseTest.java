@@ -1,8 +1,5 @@
 package helper;
 
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -53,7 +50,7 @@ public class BaseTest {
     public void setup() {
         String browserName = prop.getProperty("browser").toLowerCase();
         Log.info("Starting Browser:" + browserName);
-         try {
+        try {
             switch (browserName) {
                 case "chrome":
                     WebDriverManager.chromedriver().setup();
@@ -69,8 +66,7 @@ public class BaseTest {
                     chromeOption.addArguments("--disable-web-security");
                     chromeOption.addArguments("--disable-popup-blocking");
                     chromeOption.setExperimentalOption("useAutomationExtension", false);
-                    chromeOption.setExperimentalOption("excludeSwitches",
-                            java.util.Collections.singletonList("enable-automation"));
+                    chromeOption.setExperimentalOption("excludeSwitches", java.util.Collections.singletonList("enable-automation"));
                     driver = new ChromeDriver(chromeOption);
                     break;
 
@@ -135,9 +131,7 @@ public class BaseTest {
 
     /************** CENTRALIZED ERROR HANDLER ******************/
     private void handleException(String action, Exception e, By locator) {
-        String message = "Exception during: " + action +
-                " | Locator: " + locator +
-                " |Error: " + e.getMessage();
+        String message = "Exception during: " + action + " | Locator: " + locator + " |Error: " + e.getMessage();
         Log.error(message);
         ExtentTestManager.getTest().fail(message);
 
@@ -145,31 +139,21 @@ public class BaseTest {
         String screenShotPath = takeScreenShotAs("Error_" + System.currentTimeMillis());
         try {
             ExtentTestManager.getTest().addScreenCaptureFromPath(screenShotPath);
-        }catch (Exception ignored){}
-    }
-
-    /************** DROPDOWN METHODS ******************/
-    public void selectValueFromSelectDd(By locator, String value, String type) {
-
-        Select s = new Select(waitForElement(locator));
-        Log.info("open dropdown: " + locator + "to select value: " + value + " by type: " + type);
-        ExtentTestManager.getTest().info("Select value: "+value+" by type: "+type+" from dropdown: "+locator);
-        switch (type) {
-            case "visibleText":
-                s.selectByVisibleText(value);
-                break;
-            case "byValue":
-                s.selectByValue(value);
-                break;
-            case "byIndex":
-                s.selectByIndex(Integer.parseInt(value));
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid Select Type");
+        } catch (Exception ignored) {
         }
     }
 
+    /****** utilityToGet Xpath of webElement (used in BootStrap dropdown) *******/
+
+    private String getElementXpath(WebElement element) {
+        return element.toString().split(" -> ")[1].replace("]", "");
+    }
+
+    /************** DROPDOWN METHODS ******************/
+
     public void selectByBootStrapDD(By locator, String value) {
+        Log.info("Selecting bootstrap dropdown value: "  +value);
+        ExtentTestManager.getTest().info("Select bootstrap dropdown value → "  +value);
         List<WebElement> list = driver.findElements(locator);
         for (WebElement ele : list) {
             if (ele.getText().equals(value)) {
@@ -179,16 +163,66 @@ public class BaseTest {
         }
     }
 
-    /************** utility to get Xpath of webElement (used in BootStrap dropdown ******************/
+//    public void selectValueFromSelectDd(By locator, String value, String type) {
+//
+//        Select s = new Select(waitForElement(locator));
+//        Log.info("open dropdown: " + locator + "to select value: " + value + " by type: " + type);
+//        ExtentTestManager.getTest().info("Select value: " + value + " by type: " + type + " from dropdown: " + locator);
+//        switch (type) {
+//            case "visibleText":
+//                s.selectByVisibleText(value);
+//                break;
+//            case "byValue":
+//                s.selectByValue(value);
+//                break;
+//            case "byIndex":
+//                s.selectByIndex(Integer.parseInt(value));
+//                break;
+//            default:
+//                throw new IllegalArgumentException("Invalid Select Type");
+//        }
+//    }
 
-    private String getElementXpath(WebElement element) {
-        return element.toString().split(" -> ")[1].replace("]", "");
+    public void selectDropdownByVisibleText(By locator, String text) {
+        Select s = new Select(waitForElement(locator));
+        Log.info("Selecting Text from dropDown: " + text + " locator: " + locator);
+        ExtentTestManager.getTest().info("Select DropDown By Text → " + text);
+        try {
+            new Select(driver.findElement(locator)).selectByVisibleText(text);
+        } catch (Exception e) {
+            handleException("selectDropdownByVisibleText", e, locator);
+            throw e;
+        }
     }
 
+    public void selectDropdownByValue(By locator, String value) {
+        Select s = new Select(waitForElement(locator));
+        Log.info("Selecting Value from dropDown: " + value + " locator: " + locator);
+        ExtentTestManager.getTest().info("Select DropDown By Value → " + value);
+        try {
+            new Select(driver.findElement(locator)).selectByValue(value);
+        } catch (Exception e) {
+            handleException("selectDropdownByValue", e, locator);
+            throw e;
+        }
+    }
 
+    public void selectDropdownByIndex(By locator, int index) {
+        Select s = new Select(waitForElement(locator));
+        Log.info("Selecting Index from dropDown: " + index + " locator: " + locator);
+        ExtentTestManager.getTest().info("Select DropDown By Index → " + index);
+        try {
+            new Select(driver.findElement(locator)).selectByIndex(index);
+        } catch (Exception e) {
+            handleException("selectDropdownByIndex", e, locator);
+            throw e;
+        }
+    }
+
+    /************** CLEAR AND ENTER AND CLICKS METHODS ******************/
     public void click(By locator) {
         Log.info("Clicking on element: " + locator);
-        ExtentTestManager.getTest().info("Click: "+locator);
+        ExtentTestManager.getTest().info("Click: " + locator);
         try {
             waitForElement(locator).click();
         } catch (Exception firstException) {
@@ -224,14 +258,6 @@ public class BaseTest {
         }
     }
 
-    public boolean isDisplayed(By locator) {
-        try {
-            return waitForElement(locator).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     /************** Window Handles method ******************/
     public void windowHandle(By locator) {
         String parentID = driver.getWindowHandle();
@@ -246,11 +272,13 @@ public class BaseTest {
         }
     }
 
-    public void switchWindow(String actualTitle) {
+    public void switchWindow(String title) {
+        Log.info("Switching window to title: "+title);
+        ExtentTestManager.getTest().info("Swith window -> "+title);
         Set<String> allWindowIds = driver.getWindowHandles();
         for (String window : allWindowIds) {
             driver.switchTo().window(window);
-            if (!driver.getTitle().contains(actualTitle)) {
+            if (!driver.getTitle().contains(title)) {
                 continue;
             }
             break;
@@ -258,15 +286,20 @@ public class BaseTest {
     }
 
     /************** ExplicitWait method ******************/
-
     public WebElement waitForElement(By locator, long timeout) {
-        wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
-        return wait.until(ExpectedConditions.visibilityOf(driver.findElement(locator)));
+        try {
+            Log.info("Waiting for: "+ locator);
+            ExtentTestManager.getTest().info("Wait For Element → "+locator);
+            wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
+            return wait.until(ExpectedConditions.visibilityOf(driver.findElement(locator)));
+        }catch (Exception e){
+            handleException("waitForElement",e,locator);
+            throw e;
+        }
     }
 
     public WebElement waitForElement(By locator) {
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        return wait.until(ExpectedConditions.visibilityOf(driver.findElement(locator)));
+        return waitForElement(locator, 10);
     }
 
     /************** Alert Handle ******************/
@@ -287,8 +320,15 @@ public class BaseTest {
     }
 
     public void mouseHover(By locator) {
-        Actions a = new Actions(driver);
-        a.moveToElement(waitForElement(locator)).build().perform();
+        Log.info("Hovering on: " + locator);
+        ExtentTestManager.getTest().info("Mouse Hover -> "+locator);
+        try {
+            Actions a = new Actions(driver);
+            a.moveToElement(waitForElement(locator)).build().perform();
+        } catch (Exception e){
+            handleException("mouseHover",e,locator);
+            throw e;
+        }
     }
 
     /************** get element text ******************/
@@ -307,31 +347,47 @@ public class BaseTest {
         return driver.getTitle();
     }
 
+    /*********** Is Displayed ************/
+    public boolean isDisplayed(By locator) {
+        try {
+            return waitForElement(locator).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /************** Switch Frame ******************/
-    public void switchToFrame(String id) {
-        driver.switchTo().frame(id);
+    public void switchToFrame(By locator) {
+        Log.info("Switching To Frame: "+locator);
+        ExtentTestManager.getTest().info("Switch To Frame → "+locator);
+        try{
+            driver.switchTo().frame(waitForElement(locator));
+        } catch (Exception e){
+            handleException("switchToFrame",e,locator);
+            throw e;
+        }
     }
 
     /************** ASSERTIONS ******************/
     public void softAssertEquals(Object actual, Object expected, String message) {
-        Log.info("Soft Assert Equals: " +message);
+        Log.info("Soft Assert Equals: " + message);
         soft.assertEquals(actual, expected, message);
         soft.assertAll();
     }
 
     public void softAssertTrue(boolean condition, String message) {
-        Log.info("Soft Assert True: " +message);
+        Log.info("Soft Assert True: " + message);
         soft.assertTrue(condition, message);
         soft.assertAll();
     }
 
     public void hardAssertEquals(Object actual, Object expected, String message) {
-        Log.info("Hard Assert Equals: " +message);
+        Log.info("Hard Assert Equals: " + message);
         Assert.assertEquals(actual, expected, message);
     }
 
     public void hardAssertTrue(boolean condition, String message) {
-        Log.info("Hard Assert True: " +message);
+        Log.info("Hard Assert True: " + message);
         Assert.assertTrue(condition, message);
     }
 
